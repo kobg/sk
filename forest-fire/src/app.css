@@ -1,0 +1,33 @@
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.grid {
+  display: flex;
+}
+
+.grid-cell {
+  width: var(--size, 16px);
+  height: var(--size, 16px);
+  margin-left: -1px;
+  margin-bottom: -1px;
+}
+
+.tree {
+  background-color: lightgreen;
+}
+
+.burning {
+  background-color: orangered;
+}
+
+.burnt {
+  background-color: brown;
+}
+
+.water {
+  background-color: cyan;
+}
