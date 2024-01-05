@@ -153,7 +153,7 @@ export function App() {
     },
   ]);
 
-  const resetFn = () => {
+  const reset = () => {
     setStarted(false);
     startedRef.current = false;
     setIteration(0);
@@ -170,8 +170,6 @@ export function App() {
       },
     ]);
   };
-
-  const reset = useCallback(resetFn, []);
 
   useEffect(() => {
     if (size) {
