@@ -95,6 +95,7 @@ const getGrid = (
       setStart = true;
     }
   }
+
   return grid;
 };
 
@@ -121,22 +122,37 @@ const neighbors = [
   [1, 1],
 ];
 
-const getWindyNeighbours = (windIndex: number) => {
-  if (windIndex) {
-    const windDir = wind[windIndex];
-    return neighbors.map(([x, y]) => [x + windDir[0], y + windDir[1]]);
+const getProbability = (wind: number[], neighbour: number[]) => {
+  const dx = neighbour[0] - wind[0];
+  const dy = neighbour[1] - wind[1];
+
+  const distance = Math.sqrt(dx * dx + dy * dy) * 10;
+
+  switch (Math.round(distance)) {
+    case 28:
+      return 0;
+    case 22:
+      return 0.4;
+    case 20:
+      return 0.5;
+    case 14:
+      return 0.8;
+    case 10:
+      return 0.85;
+    case 0:
+      return 1;
+    default:
+      return 1;
   }
-  return neighbors;
 };
+
+const getWindyNeighbours = (windIndex: number) => wind[windIndex];
 
 export function App() {
   const [size, setSize] = useState(50);
   const [seed, setSeed] = useState(Randomizer.getSeed());
   const [started, setStarted] = useState(false);
   const startedRef = useRef(false);
-  const burnProbability = 0.5;
-  const regrowthRate = 20;
-  const selfIgnite = 0.0001;
   const [iteration, setIteration] = useState(0);
   const iterationRef = useRef(0);
   const burningTrees = useRef(0);
@@ -147,6 +163,8 @@ export function App() {
   const [windIndex, setWindIndex] = useState(6);
   const windIndexRef = useRef(6);
   const iterationSpeedRef = useRef(500);
+  const burnProbabilityRef = useRef(0.5);
+
   const [selfIgniteOn, setSelfIgniteOn] = useState(false);
   const selfIgniteOnRef = useRef(selfIgniteOn);
   const [chartData, setChartData] = useState([
@@ -155,6 +173,9 @@ export function App() {
       "Burning Trees": burningTrees.current,
     },
   ]);
+
+  const regrowthRateRef = useRef(20);
+  const selfIgniteRef = useRef(0.0001);
 
   const reset = () => {
     setStarted(false);
@@ -198,11 +219,11 @@ export function App() {
           for (let y = 0; y < size; y++) {
             if (
               grid[x][y].type === "burnt" &&
-              iterationRef.current - grid[x][y].iter === regrowthRate
+              iterationRef.current - grid[x][y].iter === regrowthRateRef.current
             ) {
               gridCopy[x][y] = { type: "tree", iter: 0 };
             }
-            windy.forEach(([i, j]) => {
+            neighbors.forEach(([i, j]) => {
               if (grid?.[x + i]?.[y + j]) {
                 if (grid[x][y].type === "burning") {
                   gridCopy[x][y] = {
@@ -216,7 +237,11 @@ export function App() {
                   grid[x][y].type !== "water" &&
                   grid[x][y].type !== "burning"
                 ) {
-                  if (Randomizer.getRandom(1, false) > burnProbability) {
+                  if (
+                    Randomizer.getRandom(1, false) *
+                      getProbability(windy, [i, j]) >
+                    burnProbabilityRef.current
+                  ) {
                     if (gridCopy[x][y]?.type !== "burning") {
                       burningTrees.current += 1;
                     }
@@ -230,7 +255,7 @@ export function App() {
               grid[x][y].type !== "burning" &&
               selfIgniteOnRef.current
             ) {
-              if (Randomizer.getRandom(1, false) < selfIgnite) {
+              if (Randomizer.getRandom(1, false) < selfIgniteRef.current) {
                 gridCopy[x][y] = { type: "burning", iter: 0 };
                 burningTrees.current += 1;
               }
@@ -320,7 +345,7 @@ export function App() {
             reset();
           }}
         >
-          Reset
+          Ustaw rozmiar
         </button>
         {"Iteracja: "}
         {iteration}
@@ -336,15 +361,54 @@ export function App() {
           }}
         ></input>
         {`Czas iteracji (ms): ${iterationSpeedRef.current}`}
+        <label>
+          Samozapłon:
+          <input
+            type="checkbox"
+            checked={selfIgniteOn}
+            onChange={() => {
+              selfIgniteOnRef.current = !selfIgniteOnRef.current;
+              setSelfIgniteOn(selfIgniteOnRef.current);
+            }}
+          ></input>
+          {selfIgniteRef.current}
+        </label>
         <input
-          type="checkbox"
-          checked={selfIgniteOn}
-          onChange={() => {
-            selfIgniteOnRef.current = !selfIgniteOnRef.current;
-            setSelfIgniteOn(selfIgniteOnRef.current);
+          type="number"
+          step={0.0001}
+          max={1}
+          min={0}
+          value={selfIgniteRef.current}
+          onChange={(ev) => {
+            selfIgniteRef.current = +ev.currentTarget.value;
           }}
         ></input>
-        {`\nSamozapłon: ${selfIgnite}`}
+        <label>
+          Prawdopodobieństwo zapłonu (1 - p){" "}
+          <input
+            type="number"
+            step={0.01}
+            max={1}
+            min={0}
+            value={burnProbabilityRef.current}
+            onChange={(ev) => {
+              burnProbabilityRef.current = +ev.currentTarget.value;
+            }}
+          ></input>
+        </label>
+        <label>
+          Czas odnowienia drzewa{" "}
+          <input
+            type="number"
+            step={1}
+            max={100}
+            min={0}
+            value={regrowthRateRef.current}
+            onChange={(ev) => {
+              regrowthRateRef.current = +ev.currentTarget.value;
+            }}
+          ></input>
+        </label>
       </div>
       <div className="grid">
         {grid.map((row, idx) => (

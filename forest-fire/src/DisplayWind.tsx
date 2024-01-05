@@ -13,7 +13,7 @@ export const DisplayWind = ({ windDirection }: { windDirection: number[] }) => {
 
   return (
     <div className="wind-grid">
-      {`Kierunek wiatru: ${windDirection[0]} ${windDirection[1]}`}
+      {`Kierunek wiatru: (${windDirection[0]}, ${windDirection[1]})`}
       {wind.map((coords) => (
         <div
           className={`wind-cell${
