@@ -11,10 +11,14 @@
   "dependencies": {
     "@preact/signals": "^1.2.2",
     "immer": "^10.0.3",
-    "preact": "^10.19.1"
+    "preact": "^10.19.1",
+    "random-seed": "^0.3.0",
+    "recharts": "^2.10.3"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.6.0",
+    "@types/node": "^20.10.6",
+    "@types/random-seed": "^0.3.5",
     "typescript": "^5.2.2",
     "vite": "^5.0.0"
   }
