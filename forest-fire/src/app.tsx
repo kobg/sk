@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { produce } from "immer";
 import { Randomizer } from "./Randomizer";
-import "./app.css";
 import { DynamicLineChart } from "./DynamicLineChart";
 import { DisplayWind } from "./DisplayWind";
+import "./app.css";
 
 type CellState = "tree" | "burning" | "burnt" | "water";
 
@@ -121,6 +121,14 @@ const neighbors = [
   [1, 1],
 ];
 
+const getWindyNeighbours = (windIndex: number) => {
+  if (windIndex) {
+    const windDir = wind[windIndex];
+    return neighbors.map(([x, y]) => [x + windDir[0], y + windDir[1]]);
+  }
+  return neighbors;
+};
+
 export function App() {
   const [size, setSize] = useState(50);
   const [seed, setSeed] = useState(Randomizer.getSeed());
@@ -137,6 +145,7 @@ export function App() {
   const sizeRef = useRef(size);
   const [windIndex, setWindIndex] = useState(6);
   const windIndexRef = useRef(6);
+  const iterationSpeedRef = useRef(500);
   const [chartData, setChartData] = useState([
     {
       name: "1",
@@ -144,7 +153,7 @@ export function App() {
     },
   ]);
 
-  const reset = () => {
+  const resetFn = () => {
     setStarted(false);
     startedRef.current = false;
     setIteration(0);
@@ -162,6 +171,8 @@ export function App() {
     ]);
   };
 
+  const reset = useCallback(resetFn, []);
+
   useEffect(() => {
     if (size) {
       const grid = getGrid(size);
@@ -169,14 +180,6 @@ export function App() {
       setCleanGrid(grid);
     }
   }, [size]);
-
-  const getWindyNeighbours = (windIndex: number) => {
-    if (windIndex) {
-      const windDir = wind[windIndex];
-      return neighbors.map(([x, y]) => [x + windDir[0], y + windDir[1]]);
-    }
-    return neighbors;
-  };
 
   const run = useCallback(() => {
     if (
@@ -244,7 +247,7 @@ export function App() {
     prevBurningTrees.current = burningTrees.current;
     iterationRef.current += 1;
     setIteration((iteration) => iteration + 1);
-    setTimeout(run, 50);
+    setTimeout(run, iterationSpeedRef.current);
   }, [size]);
 
   return (
@@ -312,6 +315,16 @@ export function App() {
         {iteration}
         {" Burning: "}
         {burningTrees.current}
+        <input
+          type="range"
+          max={1000}
+          min={50}
+          value={iterationSpeedRef.current}
+          onChange={(ev) => {
+            iterationSpeedRef.current = +ev.currentTarget.value;
+          }}
+        ></input>
+        {`Czas iteracji (ms): ${iterationSpeedRef.current}`}
       </div>
       <div className="grid">
         {grid.map((row, idx) => (
